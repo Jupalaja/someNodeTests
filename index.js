@@ -1,7 +1,9 @@
+require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const app = express();
-const port = 3000; 
+const port = process.env.PORT || 3000; 
+
 const getPopularRepositories = async (req, res) => {
     try {
         const username = 'google';
@@ -19,7 +21,7 @@ const getPopularRepositories = async (req, res) => {
 
         res.json(sortedRepos);
     } catch (error) {
-        console.error('Error fetching data from GitHub API: ', error);
+        console.error('Error fetching data from GitHub API: ', error.message);
         res.status(500).send('Error fetching data from GitHub API');
     }
 };
