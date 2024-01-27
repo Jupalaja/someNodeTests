@@ -1,33 +1,31 @@
-require('dotenv').config();
+const express = require('express');
 const axios = require('axios');
+const app = express();
+const port = 3000; 
+const getPopularRepositories = async (req, res) => {
+    try {
+        const username = 'google';
+        const url = `https://api.github.com/users/${username}/repos`;
+        const response = await axios.get(url);
+        const repos = response.data;
+        const sortedRepos = repos
+            .sort((a, b) => b.stargazers_count - a.stargazers_count)
+            .slice(0, 10)
+            .map(repo => ({
+                name: repo.name,
+                stars: repo.stargazers_count,
+                url: repo.html_url
+            }));
 
-const getPopularRepositories = async (username) => {
-  try {
-    const response = await axios.get(`https://api.github.com/users/${username}/repos`);
-
-    const repos = response.data
-      .map(repo => ({
-        name: repo.name,
-        stars: repo.stargazers_count,
-        forks: repo.forks,
-        url: repo.html_url
-      }))
-      .sort((a, b) => b.stars - a.stars)
-      .slice(0, 10);
-
-    return repos;
-  } catch (error) {
-    console.error('Error fetching repositories:', error.message);
-    return [];
-  }
+        res.json(sortedRepos);
+    } catch (error) {
+        console.error('Error fetching data from GitHub API: ', error);
+        res.status(500).send('Error fetching data from GitHub API');
+    }
 };
 
-const displayRepositories = (repos) => {
-  console.log('Top 10 Repositorios Populares de Google:');
-  repos.forEach((repo, index) => {
-    console.log(`${index + 1}. ${repo.name} - 🌟: ${repo.stars} - 🍴: ${repo.forks}`);
-    console.log(`   URL: ${repo.url}\n`);
-  });
-};
+app.get('/', getPopularRepositories);
 
-getPopularRepositories('google').then(displayRepositories);
+app.listen(port, () => {
+    console.log(`Server listening at http://localhost:${port}`);
+});
