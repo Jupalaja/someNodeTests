@@ -3,22 +3,21 @@ const express = require('express');
 const axios = require('axios');
 const app = express();
 const port = process.env.PORT || 3000;
+const getPopularityIndex = require('./utils/getPopularityIndex');
 
 const getPopularRepositories = async (req, res) => {
   const username = 'google';
-  const url = `https://api.github.com/users/${username}/repos`;
+  const url = `https://api.github.com/users/${username}/repos?sort=updated`;
 
   try {
+    const { starImportance, forkImportance } = req.query;
     const response = await axios.get(url);
     const repos = response.data;
-    const topRepos = repos
-      .sort((a, b) => b.stargazers_count - a.stargazers_count)
-      .slice(0, 10)
-      .map((repo) => ({
-        name: repo.name,
-        stars: repo.stargazers_count,
-        url: repo.html_url,
-      }));
+    const topRepos = getPopularityIndex(
+      repos,
+      starImportance ? parseFloat(starImportance) : 0,
+      forkImportance ? parseFloat(forkImportance) : 0
+    );
 
     res.json(topRepos);
   } catch (error) {
